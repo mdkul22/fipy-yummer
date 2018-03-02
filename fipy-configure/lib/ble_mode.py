@@ -23,7 +23,8 @@ class BLE()
         self.ble.set_advertisement(name='tQb IoT', service_uuid=b'1234567890123456')
         self.ble.callback(trigger=Bluetooth.CLIENT_CONNECTED | Bluetooth.CLIENT_DISCONNECTED, hander=self.conn_cb)
         self.ble.advertise(True)
-        service_1 = self.ble.service(uuid=b'1234567890123456', isprimary=True, nbr_chars=5)
+        boot_service = self.ble.service(uuid=b'1234567890123456', isprimary=True, nbr_chars=5)
 
         #
-        deploy_f = serv_1.characteristic(uuid=b'a234567890123456', value=0)
+        deploy_f = boot_serv.characteristic(uuid=b'a234567890123456', value=0)
+        pycom.nvs_set('mode', 0)
