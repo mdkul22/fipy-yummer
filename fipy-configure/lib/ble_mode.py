@@ -2,7 +2,7 @@ from network import Bluetooth
 import pycom
 
 
-class BLE()
+class BLE():
 """ This class initializes the BLE mode in the fipy and also checks
     if the BLE mode param is on or not """"
 
@@ -39,21 +39,18 @@ class BLE()
         pycom.nvs_set('lte', 0)
         # wifi_service chars
         wifi_ssid = wifi_service.characteristic(uuid=b'3000', value=0)
-        pycom.nvs_set('wifi_ssid', 0)
+
         wifi_pass = wifi_service.characteristic(uuid=b'3001', vaue=0)
-        pycom.nvs_set('wifi_pass', 0)
+
         # lora_service chars
         lora_appkey = lora_service.characteristic(uuid=b'4000', value=0)
-        pycom.nvs_set('appkey', 0)
+
         lora_appSkey = lora_service.characteristic(uuid=b'4001', value=0)
-        pycom.nvs_set('appSkey', 0)
+
         lora_nwkSkey = lora_service.characteristic(uuid=b'4002', value=0)
-        pycom.nvs_set('nwkSkey', 0)
+
         # lte_service chars
-
-
         deploy_f_cb = deploy_f.callback(trigger=self.ble.CHAR_WRITE_EVENT | self.ble.CHAR_READ_EVENT, handler=deploy_cb_handler)
-
 
 
     def char_cb_handler(chr):

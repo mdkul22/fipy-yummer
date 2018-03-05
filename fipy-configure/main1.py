@@ -34,7 +34,7 @@ def char1_cb_handler(chr):
         if char1_read_counter < 3:
             print('Read request on char 1')
         else:
-            return 'ABC DEF'
+            return "ABCDEF"
 
 char1_cb = chr1.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=char1_cb_handler)
 
