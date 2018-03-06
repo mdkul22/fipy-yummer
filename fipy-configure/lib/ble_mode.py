@@ -4,16 +4,17 @@ from nvstring import NvsStore
 from machine import reset
 
 class BLE():
-""" This class initializes the BLE mode in the fipy and also checks
-    if the BLE mode param is on or not """"
+# This class initializes the BLE mode in the fipy and also checks
+# if the BLE mode param is on or not
 
     def __init__(self, name, uuid):
         self.ble = Bluetooth()
+        self.ble.set_advertisement(name=name, service_uuid=uuid)
         self.setup()
 
     def connect_cb(self, bt_o):
         # callback for connection
-        events = bt_0.events()
+        events = bt_o.events()
         if events & Bluetooth.CLIENT_CONNECTED:
             print("Client connected")
         elif events & Bluetooth.CLIENT_DISCONNECTED:
@@ -21,64 +22,63 @@ class BLE():
 
     def setup(self):
         # sets up all the services and characteristics
-        self.ble.set_advertisement(name='tQb IoT', service_uuid=b'1234567890123456')
-        self.ble.callback(trigger=Bluetooth.CLIENT_CONNECTED | Bluetooth.CLIENT_DISCONNECTED, hander=self.conn_cb)
+        self.ble.callback(trigger=Bluetooth.CLIENT_CONNECTED | Bluetooth.CLIENT_DISCONNECTED, handler=self.connect_cb)
         self.ble.advertise(True)
         # main service switches
-        restart_service = self.ble.service(uuid='0000', isprimary=True, nr_chars=1)
-        boot_service = self.ble.service(uuid='fff0', isprimary=True, nbr_chars=4)
-        wifi_service = self.ble.service(uuid='fff1', isprimary=True, nbr_chars=2)
-        lora_service = self.ble.service(uuid='fff2', isprimary=True, nbr_chars=3)
-        lte_service = self.ble.service(uuid='fff3', isprimary=True, nbr_chars=1)
+        restart_service = self.ble.service(uuid=0x0000, isprimary=True, nbr_chars=1)
+        boot_service = self.ble.service(uuid=0xfff0, isprimary=True, nbr_chars=4)
+        wifi_service = self.ble.service(uuid=0xfff, isprimary=True, nbr_chars=2)
+        lora_service = self.ble.service(uuid=0xfff2, isprimary=True, nbr_chars=3)
+        lte_service = self.ble.service(uuid=0xfff3, isprimary=True, nbr_chars=1)
         # characteristic / service declarations
-        self.mode_f = boot_serv.characteristic(uuid=b'1000', value=0)
+        self.mode_f = boot_service.characteristic(uuid=0x1000, value=0)
         pycom.nvs_set('mode', 0)
         # generic services
-        self.wifi_f = wifi_service.characteristic(uuid=b'2000', value=0)
+        self.wifi_f = wifi_service.characteristic(uuid=0x2000, value=0)
         pycom.nvs_set('wifi', 0)
-        self.lora_f = boot_service.characteristic(uuid=b'2001', value=0)
+        self.lora_f = boot_service.characteristic(uuid=0x2001, value=0)
         pycom.nvs_set('lora', 0)
-        self.lte_f = boot_service.characteristic(uuid=b'2002', value=0)
+        self.lte_f = boot_service.characteristic(uuid=0x2002, value=0)
         pycom.nvs_set('lte', 0)
         # restart declaration
-        self.restart_f = restart_service.characteristic(uuid=b'0001', value=0)
+        self.restart_f = restart_service.characteristic(uuid=0x0001, value=0)
         # wifi_service chars
-        self.wifi_ssid = wifi_service.characteristic(uuid=b'3000', value=0)
-        self.wifi_pass = wifi_service.characteristic(uuid=b'3001', vaue=0)
+        self.wifi_ssid = wifi_service.characteristic(uuid=0x3000, value=0)
+        self.wifi_pass = wifi_service.characteristic(uuid=0x3001, value=0)
         # lora_service chars
-        self.lora_appkey = lora_service.characteristic(uuid=b'4000', value=0)
-        self.lora_appSkey = lora_service.characteristic(uuid=b'4001', value=0)
-        self.lora_nwkSkey = lora_service.characteristic(uuid=b'4002', value=0)
+        self.lora_appkey = lora_service.characteristic(uuid=0x4000, value=0)
+        self.lora_appSkey = lora_service.characteristic(uuid=0x4001, value=0)
+        self.lora_nwkSkey = lora_service.characteristic(uuid=0x4002, value=0)
         # callbacks to deploy_handler which will use the switch_dict to switch between chars
-        mode_f_cb = self.mode_f.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=deploy_handler)
-        wifi_f_cb = self.wifi_f.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=deploy_handler)
-        lora_f_cb = self.lora_f.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=deploy_handler)
-        lte_f_cb = self.lte_f.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=deploy_handler)
+        mode_f_cb = self.mode_f.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.deploy_handler)
+        wifi_f_cb = self.wifi_f.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.deploy_handler)
+        lora_f_cb = self.lora_f.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.deploy_handler)
+        lte_f_cb = self.lte_f.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.deploy_handler)
         # restart details callback
-        restart_f_cb = self.restart_handler(trigger=Bluetooth.CHAR_WRITE_EVENT, handler=restart_handler)
+        restart_f_cb = self.restart_f.callback(trigger=Bluetooth.CHAR_WRITE_EVENT, handler=self.restart_handler)
         # wifi details callback
-        wifi_cb1 = self.wifi_ssid.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=wifi_handler)
-        wifi_cb2 = self.wifi_ssid.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=wifi_handler)
+        wifi_cb1 = self.wifi_ssid.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.wifi_handler)
+        wifi_cb2 = self.wifi_ssid.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.wifi_handler)
         # lora details callback
-        lora_cb1 = self.lora_appkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=lora_handler)
-        lora_cb2 = self.lora_appSkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=lora_handler)
-        lora_cb3 = self.lora_nwkSkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=lora_handler)
+        lora_cb1 = self.lora_appkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.lora_handler)
+        lora_cb2 = self.lora_appSkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.lora_handler)
+        lora_cb3 = self.lora_nwkSkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.lora_handler)
 
-    def deploy_handler(chr):
+    def deploy_handler(self,chr):
         # handles write and read requests from the client
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
             val = chr.value()
-            if val[0] == "0":
+            if val[2] == "0":
                 self.mode_f.value(val[1])
                 NvsStore('mode', val[1])
-            elif val[0] == "1":
+            elif val[2] == "1":
                 self.wifi_f.value(val[1])
                 NvsStore('wifi', val[1])
-            elif val[0] == "2":
+            elif val[2] == "2":
                 self.lora_f.value(val[1])
                 NvsStore('lora', val[1])
-            elif val[0] == "3":
+            elif val[2] == "3":
                 self.lte_f.value(val[1])
                 NvsStore('lte', val[1])
             else:
@@ -87,7 +87,7 @@ class BLE():
         elif events & Bluetooth.CHAR_READ_EVENT:
             return "REJECTED"
 
-    def wifi_handler(chr):
+    def wifi_handler(self,chr):
         # handles writing the wifi ssid and password
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
@@ -101,12 +101,12 @@ class BLE():
         elif events & Bluetooth.CHAR_READ_EVENT:
             print("Connected to ssid: " + chr.value())
 
-    def lora_handler(chr):
+    def lora_handler(self,chr):
         # handles writing the lora appkey, appSkey and nwkSkey
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
             val = chr.value()
-            if val[0] == "0":
+            if val[0] == "1":
                 self.lora_appkey.value(val[1:])
                 NvsStore('appkey', val[1:])
             elif val[0] == "1":
@@ -118,11 +118,12 @@ class BLE():
         elif events & Bluetooth.CHAR_READ_EVENT:
             print("Connected to lora appkey: " + self.lora_appkey.value())
 
-    def restart_handler(chr):
+    def restart_handler(self,chr):
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
+            print(chr.value())
             val = chr.value()
-            if val == "1":
+            if val == b'1':
                 reset() # hard reset resets hardware and software except firmware loaded
             else:
                 print("Breach")
