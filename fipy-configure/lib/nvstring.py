@@ -7,7 +7,7 @@ class NvsStore():
 #    functions to convert string in to int and int back to string we use this
 #    class to store a topic and string in a series of nvram cells
 
-    def __init__(self, stringToStore, topic):
+    def __init__(self, topic, stringToStore):
 
         self.string = stringToStore
         self.topic = topic
@@ -91,3 +91,8 @@ class NvsExtract():
         integer = integer - 0x200
         integer = hex(integer)
         return binascii.unhexlify(integer[2:])
+
+test = False
+if test == True:
+    NvsStore("ssid", "one")
+    NvsExtract("ssid")
