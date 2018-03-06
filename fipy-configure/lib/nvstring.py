@@ -15,8 +15,8 @@ class NvsStore():
 
     def __Init(self, string, topic):
         # step 1: split string into a list of strings each of maximum 4 chars
-        #    step 2: store the topic and string in the nvram cell and use str2int
-        #            to shift each list componenent into nvram
+        # step 2: store the topic and string in the nvram cell and use str2int
+        #         to shift each list componenent into nvram
         self.strSplit(string)
         self.store(topic)
 
@@ -27,10 +27,12 @@ class NvsStore():
         return x
 
     def store(self, topic):
+        # store list values into nvram topic spaces
         for i in range(len(self.strlist)):
             nvs_set(topic+str(i), self.str2int(self.strlist[i]))
 
     def strSplit(self, string):
+        # split string into 4 chars each and put it in a list
         self.strlist = []
         temp = string
         while temp != "":
@@ -41,7 +43,7 @@ class NvsStore():
             temp = temp[:len(temp)-4]
 
     def intcount(self, val):
-        # old function may not be used
+        # old function used for debugging
         y = val
         i = 0
         while int(y/10) != 0:
@@ -64,6 +66,7 @@ class NvsExtract():
         self.extractInt(topic)
 
     def extractInt(self, topic):
+        # extract integer from nvram topic and put string in self.string
         cnt = 0
         self.string = ""
         x = []
@@ -84,7 +87,7 @@ class NvsExtract():
             temp = temp[:len(temp)-1]
 
     def int2str(self, integer):
-        # to be shifted to NvsExtract class
+        # convert integer obtained into character string
         integer = integer - 0x200
         integer = hex(integer)
         return binascii.unhexlify(integer[2:])
