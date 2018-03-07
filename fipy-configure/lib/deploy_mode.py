@@ -3,11 +3,30 @@ import time
 import network
 from nvstring import NvsExtract
 
+# all variables
+# switches
+MODE_S = "mode"
+WIFI_S = "wifi"
+MQTT_S = "mqtt"
+LORA_S = "lora"
+LTE_S = "lte"
+# characteristics
+# wifi
+SSID = "ssid"
+PASS = "pass"
+# MQTT
+M_SERVER = "server"
+M_PORT = "port"
+# LORA
+APPKEY = "appkey"
+APPSKEY = "APPSKEY"
+NWKSKEY = "nwkSkey"
 
 class Deploy():
 # deploy mode
     def __init__(self):
-        
+
+
     def var_check(self):
         # check if mode is 1 and if not, enter low power state
 

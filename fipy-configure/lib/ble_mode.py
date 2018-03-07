@@ -61,6 +61,9 @@ class BLE():
         self.lora_appSkey = lora_service.characteristic(uuid=0x4001, value=0)
         self.lora_nwkSkey = lora_service.characteristic(uuid=0x4002, value=0)
 
+        # sensor_service chars -> light, pressure, humidity, temperature, altitude
+
+
         # callbacks to deploy_handler which will use the switch_dict to switch between chars
         mode_f_cb = self.mode_f.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.deploy_handler)
         wifi_f_cb = self.wifi_f.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.deploy_handler)
@@ -77,10 +80,13 @@ class BLE():
         # mqtt details callback
         mqtt_cb1 = self.mqtt_server.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.mqtt_handler)
         mqtt_cb2 = self.mqtt_port.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.mqtt_handler)
+
         # lora details callback
         lora_cb1 = self.lora_appkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.lora_handler)
         lora_cb2 = self.lora_appSkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.lora_handler)
         lora_cb3 = self.lora_nwkSkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.lora_handler)
+
+        # sensor details callback
 
     def deploy_handler(self,chr):
         # handles write and read requests from the client
