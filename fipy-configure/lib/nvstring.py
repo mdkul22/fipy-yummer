@@ -80,11 +80,9 @@ class NvsExtract():
             self.string = self.string + x[len(x) -1]
             x = x[:len(x)-1]
         temp = self.string
-        self.string = ""
-        print(temp)
-        for i in range(len(self.string)):
-            self.string =+ temp[len(temp) - 1]
-            temp = temp[:len(temp)-1]
+
+    def retval(self):
+        return self.string
 
     def int2str(self, integer):
         # convert integer obtained into character string
