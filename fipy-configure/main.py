@@ -20,6 +20,6 @@ from ble_mode import BLE
 
 #else
     # write the BLE mode initializers
-test = True
+test = False
 if test == True:
     x = BLE("FiPy", 0xa234567890123456)
