@@ -1,8 +1,11 @@
 import pycom
 import time
-import network
+from network import WLAN
 from nvstring import NvsExtract
 from machine import reset
+from mqtt import MQTTCLient
+from SI7006A20 import SI7006A20
+from machine import Timer
 # all variables
 # switches
 MODE_S = "mode"
@@ -21,11 +24,14 @@ M_PORT = "port"
 APPKEY = "appkey"
 APPSKEY = "APPSKEY"
 NWKSKEY = "nwkSkey"
+# SENSORS
+TEMP = "tempsensor"
+TEMP_F = "temp_f"
 
 class Deploy():
 # deploy mode
     def __init__(self):
-
+        __Init()
 
     def __Init(self):
         # check if mode is 1 and if not, enter low power state
@@ -46,18 +52,42 @@ class Deploy():
             self.LoRa_Setup()
 
         # not yet complete
-
-    def Sensor_Setup(self):
-        # Using Pysense board currently, so we will employ those sensors
-
     def WiFi_Setup(self):
         # Use nvram values to connect to a WiFi
+        wlan = WLAN(mode=WLAN.STA)
+        wlan.antenna(WLAN.EXT_ANT)
+        wlan.connect(NvsExtract(SSID),auth=(WLAN.WPA2, NvsExtract(PASS)), timeout=5000)
+
+        while not wlan.isconnected():
+            print("NOT CONNECTED")
+            machine.idle()
+
+        print("Connected to WiFi\n")
 
     def MQTT_Setup(self):
         # Connect to a mqtt server
+        self.client = MQTTCLient("FiPy", NvsExtract(M_SERVER), port=int(NvsExtract(M_PORT)))
+        self.client.connect()
+        self.Sensor_Setup()
+        if self.tFrequency  != 0:
+            pub_t = Timer.alarm(self.mqtt_publish, self.tFrequency, periodic=True)
+
+    def t_publish(self, freq):
+        temp_sensor = SI7006A20()
+        self.client.publish("temperature", temp_sensor.temperature())
+        self.client.publish("humidity", temp_sensor.humidity())
+
 
     def LoRa_Setup(self):
+        pass
         # connect to a LoRaWAN gateway
 
     def LTE_Setup(self):
         # connect to the internet using LTE
+
+    def Sensor_Setup(self):
+        # Using Pysense board currently, so we will employ those sensors
+        if NvsExtract(TEMP) == '1':
+            self.tFrequency = int(NvsExtract(TEMP_F))
+        else:
+            self.tFrequency = 0

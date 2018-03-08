@@ -33,6 +33,8 @@ class BLE():
         lte_service = self.ble.service(uuid=0xfff3, isprimary=True, nbr_chars=1)
         sensor_service = self.ble.service(uuid=0xfff4, isprimary=True, nbr_chars=3)
         # characteristic / service declarations
+        self.id_f = boot_service.characteristic(uuid=0x0000, value=0)
+        pycom.nvs_set('id', 0)
         self.mode_f = boot_service.characteristic(uuid=0x1000, value=0)
         pycom.nvs_set('mode', 0)
         # generic services to be added to boot service
@@ -62,7 +64,8 @@ class BLE():
         self.lora_nwkSkey = lora_service.characteristic(uuid=0x4002, value=0)
 
         # sensor_service chars -> light, pressure, humidity, temperature, altitude
-
+        self.temp_sensor = sensor_service.characteristic(uuid=0x5001, value=0)
+        self.temp_freq = sensor_service.characteristic(uuid=50011, value=0)
 
         # callbacks to deploy_handler which will use the switch_dict to switch between chars
         mode_f_cb = self.mode_f.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.deploy_handler)
@@ -87,24 +90,28 @@ class BLE():
         lora_cb3 = self.lora_nwkSkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.lora_handler)
 
         # sensor details callback
+        sensor_cb = self.temp_sensor.callback(trigger=Bluetooth.CHAR_WRITE_EVENT, handler=self.sensor_handler)
 
     def deploy_handler(self,chr):
         # handles write and read requests from the client
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
             val = chr.value()
-            if val[2] == '0':
+            if val[0] == '0':
                 self.mode_f.value(val[1])
                 NvsStore('mode', val[1])
-            elif val[2] == '1':
+            elif val[0] == '1':
                 self.wifi_f.value(val[1])
                 NvsStore('wifi', val[1])
-            elif val[2] == '2':
+            elif val[0] == '2':
                 self.lora_f.value(val[1])
                 NvsStore('lora', val[1])
             elif val[2] == '3':
                 self.lte_f.value(val[1])
                 NvsStore('lte', val[1])
+            elif val[2] == '4':
+                self.id_f.value(val[1:])
+                NvsStore('id', val[1:])
             else:
                 pass
 
@@ -163,3 +170,13 @@ class BLE():
                 NvsStore('port', val[1:])
         elif events & Bluetooth.CHAR_READ_EVENT:
             print("Connected to server: " + self.mqtt_server.value())
+
+    def sensor_handler(self, chr):
+        events = chr.events()
+        if events & Bluetooth.CHAR_WRITE_EVENT:
+            if val[0] == '0':
+                self.temp_sensor.value(val[1])
+                NvsStore('tempsensor', val[1])
+                NvsStore('temp_f', val[2:])
+            else:
+                pass # for now
