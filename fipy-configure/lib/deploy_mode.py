@@ -70,6 +70,7 @@ class Deploy():
         self.client.connect()
         self.Sensor_Setup()
         if self.tFrequency  != 0:
+            # alarm basically used for callbacks to prevent polling
             pub_t = Timer.alarm(self.mqtt_publish, self.tFrequency, periodic=True)
 
     def t_publish(self, freq):
