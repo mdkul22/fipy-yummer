@@ -4,12 +4,14 @@ import pycom
 #import time
 from ble_mode import BLE
 from deploy_mode import Deploy
+from nvstring import NvsExtract
 
-
-if pycom.nvs_get('mode') == 1:
+if NvsExtract('mode').retval() == '1':
+    print("begin deploy\n")
     launch = Deploy()
 
 else:
+    print("begin BLE\n")
     configure = BLE("FiPy", 0xa234567890123456)
 
 #else

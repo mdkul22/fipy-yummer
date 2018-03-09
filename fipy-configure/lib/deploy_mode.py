@@ -2,7 +2,7 @@ import pycom
 import time
 from network import WLAN
 from nvstring import NvsExtract
-from machine import reset
+from machine import reset, idle
 from mqtt import MQTTClient
 from SI7006A20 import SI7006A20
 from machine import Timer
@@ -31,7 +31,7 @@ TEMP_F = "temp_f"
 class Deploy():
 # deploy mode
     def __init__(self):
-        __Init()
+        self.__Init()
 
     def __Init(self):
         # check if mode is 1 and if not, enter low power state
@@ -56,18 +56,19 @@ class Deploy():
         # Use nvram values to connect to a WiFi
         wlan = WLAN(mode=WLAN.STA)
         wlan.antenna(WLAN.EXT_ANT)
-        wlan.connect(NvsExtract(SSID),auth=(WLAN.WPA2, NvsExtract(PASS)), timeout=5000)
+        NvsExtract(SSID)
+        wlan.connect(NvsExtract(SSID).retval(),auth=(WLAN.WPA2, NvsExtract(PASS).retval()), timeout=5000)
 
         while not wlan.isconnected():
-            print("NOT CONNECTED")
-            machine.idle()
+            idle()
 
         print("Connected to WiFi\n")
 
     def MQTT_Setup(self):
         # Connect to a mqtt server
-        self.client = MQTTCLient("FiPy", NvsExtract(M_SERVER), port=int(NvsExtract(M_PORT)))
+        self.client = MQTTClient("FiPy", NvsExtract(M_SERVER).retval(), port=int(NvsExtract(M_PORT).retval()))
         self.client.connect()
+        print("MQTT Connected")
         self.Sensor_Setup()
         if self.tFrequency  != 0:
             # alarm basically used for callbacks to prevent polling
