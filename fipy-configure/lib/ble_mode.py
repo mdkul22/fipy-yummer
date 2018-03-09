@@ -93,6 +93,7 @@ class BLE():
         sensor_cb = self.temp_sensor.callback(trigger=Bluetooth.CHAR_WRITE_EVENT, handler=self.sensor_handler)
 
     def deploy_handler(self,chr):
+        print("Entered Deploy Handler")
         # handles write and read requests from the client
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
@@ -119,6 +120,7 @@ class BLE():
             return "REJECTED"
 
     def wifi_handler(self,chr):
+        print("Wifi Handler")
         # handles writing the wifi ssid and password
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
@@ -151,6 +153,7 @@ class BLE():
 
     def restart_handler(self,chr):
         events = chr.events()
+        print("restart handler")
         if events & Bluetooth.CHAR_WRITE_EVENT:
             print(chr.value())
             val = chr.value()
@@ -160,6 +163,7 @@ class BLE():
                 print("Breach")
 
     def mqtt_handler(self, chr):
+        print("MQTT handler")
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
             if val[0] == '0':
@@ -172,6 +176,7 @@ class BLE():
             print("Connected to server: " + self.mqtt_server.value())
 
     def sensor_handler(self, chr):
+        print("Sensor handler")
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
             if val[0] == '0':

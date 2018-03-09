@@ -3,7 +3,7 @@ import time
 from network import WLAN
 from nvstring import NvsExtract
 from machine import reset
-from mqtt import MQTTCLient
+from mqtt import MQTTClient
 from SI7006A20 import SI7006A20
 from machine import Timer
 # all variables
@@ -85,6 +85,7 @@ class Deploy():
 
     def LTE_Setup(self):
         # connect to the internet using LTE
+        pass
 
     def Sensor_Setup(self):
         # Using Pysense board currently, so we will employ those sensors
