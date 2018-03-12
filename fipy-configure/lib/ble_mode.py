@@ -214,8 +214,9 @@ class BLE():
                 NvsStore('acclsensor', val[1])
                 NvsStore('accl_f', val[2:])
             elif val[0] == '3':
-                self.alt_sensor.value(val[1])
-                NvsStore('altsensor', val[1])
-                NvsStore('alt_f', val[2:])
-            else:
-                pass # for now
+                self.light_sensor.value(val[1])
+                NvsStore('lightsensor', val[1])
+                NvsStore('light_f', val[2:])
+
+        else:
+            pass # for now

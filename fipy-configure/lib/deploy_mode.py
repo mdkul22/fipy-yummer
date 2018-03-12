@@ -26,8 +26,14 @@ APPSKEY = "APPSKEY"
 NWKSKEY = "nwkSkey"
 # SENSORS
 TEMP = "tempsensor"
+ALT = "altsensor"
+ACCL = "acclsensor"
+LIGHT = "lightsensor"
+# freqs
 TEMP_F = "temp_f"
-
+ALT_F = "alt_f"
+ACCL = "accl_f"
+LIGHT_F = "light_f"
 class Deploy():
 # deploy mode
     def __init__(self):
@@ -84,13 +90,18 @@ class Deploy():
         pass
         # connect to a LoRaWAN gateway
 
-    def LTE_Setup(self):
-        # connect to the internet using LTE
-        pass
-
     def Sensor_Setup(self):
         # Using Pysense board currently, so we will employ those sensors
         if NvsExtract(TEMP) == '1':
             self.tFrequency = int(NvsExtract(TEMP_F))
+        if NvsExtract(ALT) == '1':
+            self.altFrequency = int(NvsExtract(ALT_F))
+        if NvsExtract(ACCL) == '1':
+            self.acclFrequency = int(NvsExtract(ACCL_F))
+        if NvsExtract(LIGHT) == '1':
+            self.lightFrequency = int(NvsExtract(LIGHT_F))
         else:
             self.tFrequency = 0
+            self.altFrequency = 0
+            self.acclFrequency = 0
+            self.lightFrequency = 0
