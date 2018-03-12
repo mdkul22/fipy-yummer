@@ -1,6 +1,6 @@
 import binascii
 from pycom import nvs_set, nvs_get
-
+# Need to make a few changes on the memory limits 
 class NvsStore():
 #   this class basically stores the string and topic provided in the nvram
 #    given the fact that the string sizes can be variable. Using a variety of

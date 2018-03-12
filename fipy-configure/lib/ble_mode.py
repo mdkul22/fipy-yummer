@@ -33,7 +33,8 @@ class BLE():
         lora_service = self.ble.service(uuid=0xfff3, isprimary=True, nbr_chars=3)
         restart_service = self.ble.service(uuid=0xfff4, isprimary=True, nbr_chars=1)
         #lte_service = self.ble.service(uuid=0xfff3, isprimary=True, nbr_chars=1)
-        sensor_service = self.ble.service(uuid=0xfff5, isprimary=True, nbr_chars=2)
+        misc_service = self.ble.service(uuid=0xfff5, isprimary=True, nbr_chars=4)
+
         # characteristic / service declarations
         self.id_f = boot_service.characteristic(uuid=0x01, value=0)
         pycom.nvs_set('id', 0)
@@ -48,23 +49,29 @@ class BLE():
         pycom.nvs_set('lora', 0)
         #self.lte_f = boot_service.characteristic(uuid=0x2002, value=0)
         #pycom.nvs_set('lte', 0)
+
         # restart declaration
         self.restart_f = restart_service.characteristic(uuid=0x01, value=0)
+
         # wifi_service chars
         self.wifi_ssid = wifi_service.characteristic(uuid=0x01, value=0)
         self.wifi_pass = wifi_service.characteristic(uuid=0x02, value=0)
+
         # mqtt_service chars
         self.mqtt_server = mqtt_service.characteristic(uuid=0x03, value=0)
         self.mqtt_port = mqtt_service.characteristic(uuid=0x04, value=0)
+
         # lora_service chars
         self.lora_appkey = lora_service.characteristic(uuid=0x01, value=0)
         self.lora_appSkey = lora_service.characteristic(uuid=0x02, value=0)
         self.lora_nwkSkey = lora_service.characteristic(uuid=0x03, value=0)
+
         # sensor_service chars -> light, pressure, humidity, temperature, altitude
         self.temp_sensor = sensor_service.characteristic(uuid=0x01, value=0)
-        print("work3")
-        self.temp_freq = sensor_service.characteristic(uuid=0x02, value=0)
-        print("Enter deploy callback\n")
+        self.alt_sensor = misc_service.characteristic(uuid=0x03, value=0)
+        self.accl_sensor = misc_service.characteristic(uuid=0x05, value=0)
+        self.light_sensor = misc_service.characteristic(uuid=0x07, value=0)
+
         # callbacks to deploy_handler which will use the switch_dict to switch between chars
         id_f_cb = self.id_f.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.deploy_handler)
         mode_f_cb = self.mode_f.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.deploy_handler)
@@ -90,7 +97,10 @@ class BLE():
         lora_cb3 = self.lora_nwkSkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.lora_handler)
 
         # sensor details callback
-        sensor_cb = self.temp_sensor.callback(trigger=Bluetooth.CHAR_WRITE_EVENT, handler=self.sensor_handler)
+        temp_sensor_cb = self.temp_sensor.callback(trigger=Bluetooth.CHAR_WRITE_EVENT, handler=self.sensor_handler)
+        alt_sensor_cb = self.alt_sensor.callback(trigger=Bluetooth.CHAR_WRITE_EVENT, handler=self.sensor_handler)
+        accl_sensor_cb = self.accl_sensor.callback(trigger=Bluetooth.CHAR_WRITE_EVENT, handler=self.sensor_handler)
+        light_sensor_cb = self.light_sensor.callback(trigger=Bluetooth.CHAR_WRITE_EVENT, handler=self.sensor_handler)
         print("setup done/n")
 
     def deploy_handler(self,chr):
@@ -116,9 +126,6 @@ class BLE():
             elif val[0] == '4':
                 self.lora_f.value(val[1])
                 NvsStore('lora', val[1])
-            #elif val[2] == '4':
-                #self.lte_f.value(val[1])
-                #NvsStore('lte', val[1])
             else:
                 pass
 
@@ -198,5 +205,17 @@ class BLE():
                 self.temp_sensor.value(val[1])
                 NvsStore('tempsensor', val[1])
                 NvsStore('temp_f', val[2:])
+            elif val[0] == '1':
+                self.alt_sensor.value(val[1])
+                NvsStore('altsensor', val[1])
+                NvsStore('alt_f', val[2:])
+            elif val[0] == '2':
+                self.accl_sensor.value(val[1])
+                NvsStore('acclsensor', val[1])
+                NvsStore('accl_f', val[2:])
+            elif val[0] == '3':
+                self.alt_sensor.value(val[1])
+                NvsStore('altsensor', val[1])
+                NvsStore('alt_f', val[2:])
             else:
                 pass # for now
