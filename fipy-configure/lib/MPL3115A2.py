@@ -43,7 +43,7 @@ class MPL3115A2:
     MPL3115_OFFSET_T = const(0x2c)
     MPL3115_OFFSET_H = const(0x2d)
 
-    def __init__(self, pysense = None, sda = 'P22', scl = 'P21', mode = PRESSURE):
+    def __init__(self, pysense = None, sda = 'P22', scl = 'P21', mode = ALTITUDE):
         if pysense is not None:
             self.i2c = pysense.i2c
         else:
