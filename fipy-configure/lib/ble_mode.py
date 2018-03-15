@@ -1,8 +1,9 @@
 from network import Bluetooth
 import pycom
 from nvstring import NvsStore, NvsExtract
-from machine import reset
-
+import machine
+import binascii
+from network import LoRa
 class BLE():
 # This class initializes the BLE mode in the fipy and also checks
 # if the BLE mode param is on or not
@@ -67,7 +68,7 @@ class BLE():
         self.lora_nwkSkey = lora_service.characteristic(uuid=0x03, value=0)
 
         # sensor_service chars -> light, pressure, humidity, temperature, altitude
-        self.temp_sensor = sensor_service.characteristic(uuid=0x01, value=0)
+        self.temp_sensor = misc_service.characteristic(uuid=0x01, value=0)
         self.alt_sensor = misc_service.characteristic(uuid=0x03, value=0)
         self.accl_sensor = misc_service.characteristic(uuid=0x05, value=0)
         self.light_sensor = misc_service.characteristic(uuid=0x07, value=0)
@@ -156,13 +157,13 @@ class BLE():
         print("exit")
 
     def lora_handler(self,chr):
-        # handles writing the lora appkey, appSkey and nwkSkey
+        # handles writing the lora deveui, appSkey and nwkSkey
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
             val = chr.value().decode('utf-8')
             if val[0] == '0':
                 self.lora_appkey.value(val[1:])
-                NvsStore('appkey', val[1:])
+                NvsStore('deveui', binascii.hexlify(LoRa().mac()).decode('utf-8'))
             elif val[0] == '1':
                 self.lora_appSkey.value(val[1:])
                 NvsStore('appSkey', val[1:])
@@ -170,7 +171,7 @@ class BLE():
                 self.lora_nwkSkey.value(val[1:])
                 NvsStore('nwkSkey', val[1:])
         elif events & Bluetooth.CHAR_READ_EVENT:
-            print("Connected to lora appkey: " + self.lora_appkey.value())
+            return binascii.hexlify(LoRa().mac()).decode('utf-8')
 
     def restart_handler(self,chr):
         events = chr.events()
@@ -178,7 +179,7 @@ class BLE():
         if events & Bluetooth.CHAR_WRITE_EVENT:
             val = chr.value().decode("utf-8")
             if val == b'1':
-                reset() # hard reset resets hardware and software except firmware loaded
+                machine.reset() # hard reset resets hardware and software except firmware loaded
             else:
                 print("Breach")
 

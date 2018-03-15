@@ -2,7 +2,7 @@ import pycom
 import time
 from network import WLAN
 from nvstring import NvsExtract
-from machine import reset, idle
+import machine
 from mqtt import MQTTClient
 from SI7006A20 import SI7006A20
 from MPL3115A2 import MPL3115A2
@@ -25,8 +25,8 @@ PASS = "pass"
 M_SERVER = "server"
 M_PORT = "port"
 # LORA
-APPKEY = "appkey"
-APPSKEY = "APPSKEY"
+DEVEUI = "deveui"
+APPSKEY = "appskey"
 NWKSKEY = "nwkSkey"
 # SENSORS
 TEMP = "tempsensor"
@@ -38,6 +38,8 @@ TEMP_F = "temp_f"
 ALT_F = "alt_f"
 ACCL = "accl_f"
 LIGHT_F = "light_f"
+
+
 class Deploy():
 # deploy mode
     def __init__(self):
@@ -46,7 +48,7 @@ class Deploy():
     def __Init(self):
         # check if mode is 1 and if not, enter low power state
         if NvsExtract(MODE_S).retval() == '0':
-            reset()
+            machine.reset()
         if NvsExtract(MODE_S).retval() == '1':
             self.boot_up()
         self.sensactive = 0
@@ -72,7 +74,7 @@ class Deploy():
         wlan.connect(NvsExtract(SSID).retval(),auth=(WLAN.WPA2, NvsExtract(PASS).retval()), timeout=5000)
 
         while not wlan.isconnected():
-            idle()
+            machine.idle()
 
         print("Connected to WiFi\n")
 
@@ -84,17 +86,36 @@ class Deploy():
         self.Sensor_Setup()
         if self.active  == 1:
             # alarm basically used for callbacks to prevent polling
-            pub_t = Timer.alarm(self.mqtt_publish, self.tFrequency, periodic=True)
+            pub_t1 = Timer.alarm(self.temp_publish, self.tFrequency, arg=1, periodic=True)
+            pub_t2= Timer.alarm(self.temp_publish, self.tFrequency, arg=2, periodic=True)
+            pub_alt = Timer.alarm(self.alt_publish, self.altFrequency, arg=self.alt_sensor.altitude(), periodic=True)
+            pub_accl1 = Timer.alarm(self.accl_publish, self.acclFrequency, arg=1, periodic=True)
+            pub_accl2 = Timer.alarm(self.accl_publish, self.acclFrequency, arg=2, periodic=True)
+            pub_light = Timer.alarm(self.light_publish, self.lightFrequency, arg=self.light_sensor.light(), periodic=True)
 
-    def t_publish(self, freq):
-        self.client.publish("temperature", self.temp_sensor.temperature())
-        self.client.publish("humidity", self.temp_sensor.humidity())
+    def temp_publish(self, v):
+        if v == 1:
+            self.client.publish("tQb/fipy/temperature", str(self.temp_sensor.temperature()))
+        if v == 2:
+            self.client.publish("tQb/fipy/humidity", str(self.temp_sensor.humidity()))
 
+    def alt_publish(self, v):
+        self.client.publish("tQb/fipy/altitude", str(v))
 
+    def accl_publish(self, v):
+        if v == 1:
+            self.client.publish("tQb/fipy/roll", str(self.accl_sensor.roll()))
+        if v == 2:
+            self.client.publish("tQb/fipy/pitch", str(self.accl_sensor.pitch()))
+
+    def light_publish(self, v):
+        self.client.publish("tQb/fipy/light", str(v))
+    # Major LoRa setup, though main setup happens in lorawan library
     def LoRa_Setup(self):
-        self.instance = LoraNode(NvsExtract('appKey'), NvsExtract('appSkey'), NvsExtract('nwkSkey'))
+        self.instance = LoraNode(NvsExtract(DEVEUI), NvsExtract(APPSKEY), NvsExtract(NWKSKEY))
         if arg == 0:
             self.Sensor_Setup()
+            # instead of polling, we put soft interrupts 
             send_t = Timer.alarm(self.lora_send_temp, self.tFrequency, periodic=True)
             send_alt = Timer.alarm(self.lora_send_alt, self.altFrequency, periodic=True)
             send_accl = Timer.alarm(self.lora_send_accl, self.acclFrequency, periodic=True)
@@ -103,18 +124,22 @@ class Deploy():
             pass
         # connect to a LoRaWAN gateway
     def lora_send_temp(self):
-        self.instance.sendData(str(self.temp_sensor.temperature))
-        self.instance.sendData(str(self.temp_sensor.humidity))
+        self.instance.sendData(str(self.temp_sensor.temperature()))
+        self.instance.sendData(str(self.temp_sensor.humidity()))
 
     def lora_send_alt(self):
-        self.instance.sendData(str(self.alt_sensor.temperature))
+        # altitude based on pressure
+        self.instance.sendData(str(self.alt_sensor.altitude()))
 
     def lora_send_accl(self):
-        self.instance.sendData(str(self.accl_sensor.temperature))
-        self.instance.sendData(str(self.accl_sensor.humidity))
+        # roll and pitch values
+        self.instance.sendData(str(self.accl_sensor.pitch()))
+        self.instance.sendData(str(self.accl_sensor.roll()))
 
     def lora_send_light(self):
-        self.instance.sendData(str(self.light_sensor.temperature))
+        # only 400 nm i.e channel 0 or mainly blue spectrum light
+        # supposedly detects white light better
+        self.instance.sendData(str(self.light_sensor.light()[0]))
 
     def Sensor_Setup(self):
         self.sensactive = 1
