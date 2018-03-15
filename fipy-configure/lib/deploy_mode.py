@@ -115,7 +115,7 @@ class Deploy():
         self.instance = LoraNode(NvsExtract(DEVEUI), NvsExtract(APPSKEY), NvsExtract(NWKSKEY))
         if arg == 0:
             self.Sensor_Setup()
-            # instead of polling, we put soft interrupts 
+            # instead of polling, we put soft interrupts
             send_t = Timer.alarm(self.lora_send_temp, self.tFrequency, periodic=True)
             send_alt = Timer.alarm(self.lora_send_alt, self.altFrequency, periodic=True)
             send_accl = Timer.alarm(self.lora_send_accl, self.acclFrequency, periodic=True)

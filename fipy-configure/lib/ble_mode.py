@@ -63,7 +63,7 @@ class BLE():
         self.mqtt_port = mqtt_service.characteristic(uuid=0x04, value=0)
 
         # lora_service chars
-        self.lora_appkey = lora_service.characteristic(uuid=0x01, value=0)
+        self.lora_deveui = lora_service.characteristic(uuid=0x01, value=0)
         self.lora_appSkey = lora_service.characteristic(uuid=0x02, value=0)
         self.lora_nwkSkey = lora_service.characteristic(uuid=0x03, value=0)
 
@@ -93,9 +93,9 @@ class BLE():
         mqtt_cb2 = self.mqtt_port.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.mqtt_handler)
 
         # lora details callback
-        lora_cb1 = self.lora_appkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.lora_handler)
-        lora_cb2 = self.lora_appSkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.lora_handler)
-        lora_cb3 = self.lora_nwkSkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.lora_handler)
+        lora_cb1 = self.lora_deveui.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.lora_handler)
+        lora_cb2 = self.lora_appSkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT, handler=self.lora_handler)
+        lora_cb3 = self.lora_nwkSkey.callback(trigger=Bluetooth.CHAR_WRITE_EVENT, handler=self.lora_handler)
 
         # sensor details callback
         temp_sensor_cb = self.temp_sensor.callback(trigger=Bluetooth.CHAR_WRITE_EVENT, handler=self.sensor_handler)
@@ -129,7 +129,6 @@ class BLE():
                 NvsStore('lora', val[1])
             else:
                 pass
-
         elif events & Bluetooth.CHAR_READ_EVENT:
             return "REJECTED"
 
@@ -162,7 +161,6 @@ class BLE():
         if events & Bluetooth.CHAR_WRITE_EVENT:
             val = chr.value().decode('utf-8')
             if val[0] == '0':
-                self.lora_appkey.value(val[1:])
                 NvsStore('deveui', binascii.hexlify(LoRa().mac()).decode('utf-8'))
             elif val[0] == '1':
                 self.lora_appSkey.value(val[1:])
@@ -218,6 +216,5 @@ class BLE():
                 self.light_sensor.value(val[1])
                 NvsStore('lightsensor', val[1])
                 NvsStore('light_f', val[2:])
-
         else:
             pass # for now

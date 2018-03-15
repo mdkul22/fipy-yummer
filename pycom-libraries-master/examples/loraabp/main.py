@@ -21,13 +21,13 @@ s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
 s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
 s.bind(5)
 # make the socket non-blocking
-s.setblocking(False)
+s.setblocking(True)
 
 # send some data
 x = 0
 
 while True:
-    s.send("hello")
+    s.send('hello')
     time.sleep(20)
     print("Sent\n" + str(x))
     x += 1
