@@ -27,7 +27,7 @@ s.setblocking(True)
 x = 0
 
 while True:
-    s.send('hello')
+    s.send("string")
     time.sleep(20)
     print("Sent\n" + str(x))
     x += 1
