@@ -4,6 +4,8 @@ from nvstring import NvsStore, NvsExtract
 import machine
 import binascii
 from network import LoRa
+
+
 class BLE():
 # This class initializes the BLE mode in the fipy and also checks
 # if the BLE mode param is on or not
