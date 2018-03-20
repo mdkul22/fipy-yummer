@@ -3,6 +3,7 @@ import socket
 import binascii
 import struct
 import time
+import json
 
 # Initialize LoRa in LORAWAN mode.
 lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
@@ -27,7 +28,9 @@ s.setblocking(True)
 x = 0
 
 while True:
-    s.send("string")
+    dict = {"name": 'temp', "val" : x}
+    msg = json.dumps(dict)
+    s.send(msg)
     time.sleep(20)
     print("Sent\n" + str(x))
     x += 1

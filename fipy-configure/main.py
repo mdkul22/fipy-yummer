@@ -1,6 +1,6 @@
 from machine import Pin, reset
 import pycom
-from ble_mode import BLE
+from configure_mode import BLE
 from deploy_mode import Deploy
 from nvstring import NvsExtract
 
