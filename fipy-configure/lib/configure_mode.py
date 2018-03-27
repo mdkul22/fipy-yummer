@@ -34,6 +34,7 @@ class BLE():
         # main service
         self.message = config_service.characteristic(uuid=0xfff0, value=0)
         # nvram declarations
+        self.msg = []
         pycom.nvs_set('id', 0)
         pycom.nvs_set('mode', 0)
         pycom.nvs_set('wifi', 0)
@@ -66,18 +67,20 @@ class BLE():
         if events & Bluetooth.CHAR_WRITE_EVENT:
             print(chr.value())
             msg = chr.value().decode('utf-8')
-            if msg[len(msg)-1:] == ">e":
+            if msg[len(msg)-2:] == '>e':
                 msg_list = msg[:len(msg)-2].split(";")
                 self.msg += msg_list
                 self.execute(self.msg) # device should reset after this
             msg_list = msg.split(";")
-            self.msg += msg_list
-        elif events & Bluetooth.CHAR_WRITE_EVENT:
+            self.msg += msg_list[1:]
+            print(self.msg)
+        elif events & Bluetooth.CHAR_READ_EVENT:
             NvsStore('deveui', binascii.hexlify(LoRa().mac()).decode('utf-8'))
             return binascii.hexlify(LoRa().mac()).decode('utf-8')
 
-    def execute(self, msg):
-        if len(msg) == 14:
+    def execute(self, msg_list):
+        print(msg_list)
+        if len(msg_list) == 15:
                 NvsStore('id', msg_list[0])
                 if msg_list[2] == 1:
                     NvsStore('wifi', msg_list[2])
@@ -124,13 +127,13 @@ class BLE():
                 else:
                     pycom.nvs_set('light_sensor', 0)
 
-                if (int(msg_list[2]) & int(msg_list[3])) | int(msg_list[4]) == 0:
+                if int(msg_list[2]) + int(msg_list[4]) == 0:
                     NvsStore('mode', 0)
                     machine.reset()
 
-                NvsStore('mode', '1')
+                NvsStore('mode', msg_list[1])
                 pycom.rgbled(0xffffff)
-                time.sleep(0.5)
+                time.sleep(2)
                 pycom.rgbled(0x000000)
                 machine.reset()
         else:
