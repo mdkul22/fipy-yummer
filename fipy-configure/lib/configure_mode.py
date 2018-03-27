@@ -63,14 +63,16 @@ class BLE():
     def msg_handler(self,chr):
         print("Entered Deploy Handler\n")
         # handles write and read requests from the client
+        print(chr.value())
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
-            print(chr.value())
             msg = chr.value().decode('utf-8')
             if msg[len(msg)-2:] == '>e':
-                msg_list = msg[:len(msg)-2].split(";")
+                msg_list = msg[1:len(msg)-2].split(";")
+                print(msg_list)
                 self.msg += msg_list
-                self.execute(self.msg) # device should reset after this
+                self.execute(self.msg)
+                return # device should reset after this
             msg_list = msg.split(";")
             self.msg += msg_list[1:]
             print(self.msg)
@@ -80,6 +82,7 @@ class BLE():
 
     def execute(self, msg_list):
         print(msg_list)
+        print(len(msg_list))
         if len(msg_list) == 15:
                 NvsStore('id', msg_list[0])
                 if msg_list[2] == 1:
@@ -89,17 +92,17 @@ class BLE():
                 else:
                     pycom.nvs_set('wifi', 0)
 
-                if msg_list[3] == 1:
+                if msg_list[3] == "1":
                     NvsStore('mqtt', msg_list[3])
                     NvsStore('server', msg_list[7])
                     NvsStore('port', msg_list[8])
                 else:
                     pycom.nvs_set('mqtt', 0)
 
-                if msg_list[4] == 1:
-                    NvsStore('lora', msg_list[3])
-                    NvsStore('ssid', msg_list[9])
-                    NvsStore('pass', msg_list[10])
+                if msg_list[4] == "1"::
+                    NvsStore('lora', msg_list[4])
+                    NvsStore('appskey', msg_list[9])
+                    NvsStore('nwkskey', msg_list[10])
                 else:
                     pycom.nvs_set('mqtt', 0)
 
@@ -128,14 +131,12 @@ class BLE():
                     pycom.nvs_set('light_sensor', 0)
 
                 if int(msg_list[2]) + int(msg_list[4]) == 0:
+                    print("YAS")
                     NvsStore('mode', 0)
-                    machine.reset()
 
                 NvsStore('mode', msg_list[1])
                 pycom.rgbled(0xffffff)
                 time.sleep(2)
                 pycom.rgbled(0x000000)
-                machine.reset()
         else:
             print("INCORRECT DATA STREAM")
-            machine.reset()
