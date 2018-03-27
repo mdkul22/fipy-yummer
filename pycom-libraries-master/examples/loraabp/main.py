@@ -4,7 +4,7 @@ import binascii
 import struct
 import time
 import json
-
+from SI7006A20 import SI7006A20
 # Initialize LoRa in LORAWAN mode.
 lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
 # create an ABP authentication params
@@ -26,14 +26,16 @@ s.setblocking(True)
 
 # send some data
 x = 0
-
+y = 0
+temp = SI7006A20()
 while True:
-    dict = {"name": 'temp', "val" : x}
+    dict = {"name": 'temp', "val" : x, "humidity" : y}
     msg = json.dumps(dict)
     s.send(msg)
     time.sleep(20)
     print("Sent\n" + str(x))
-    x += 1
+    x = temp.temperature()
+    y = temp.humidity()
 
 # get any data received...
 data = s.recv(64)

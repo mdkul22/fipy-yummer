@@ -4,7 +4,7 @@ from nvstring import NvsStore, NvsExtract
 import machine
 import binascii
 from network import LoRa
-
+import time
 
 class BLE():
 # This class initializes the BLE mode in the fipy and also checks
@@ -32,7 +32,7 @@ class BLE():
         # main service switches
         config_service = self.ble.service(uuid=0xfff0, isprimary=True, nbr_chars=1)
         # main service
-        self.message = config_service.characteristic(uuid=0x0001, value=0)
+        self.message = config_service.characteristic(uuid=0xfff0, value=0)
         # nvram declarations
         pycom.nvs_set('id', 0)
         pycom.nvs_set('mode', 0)
@@ -59,13 +59,25 @@ class BLE():
 
         print("waiting for callback")
 
-    def m_handler(self,chr):
+    def msg_handler(self,chr):
         print("Entered Deploy Handler\n")
         # handles write and read requests from the client
-        msg = chr.value().decode('utf-8')
-        msg_list = msg.split(";")
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
+            print(chr.value())
+            msg = chr.value().decode('utf-8')
+            if msg[len(msg)-1:] == ">e":
+                msg_list = msg[:len(msg)-2].split(";")
+                self.msg += msg_list
+                self.execute(self.msg) # device should reset after this
+            msg_list = msg.split(";")
+            self.msg += msg_list
+        elif events & Bluetooth.CHAR_WRITE_EVENT:
+            NvsStore('deveui', binascii.hexlify(LoRa().mac()).decode('utf-8'))
+            return binascii.hexlify(LoRa().mac()).decode('utf-8')
+
+    def execute(self, msg):
+        if len(msg) == 14:
                 NvsStore('id', msg_list[0])
                 if msg_list[2] == 1:
                     NvsStore('wifi', msg_list[2])
@@ -112,14 +124,15 @@ class BLE():
                 else:
                     pycom.nvs_set('light_sensor', 0)
 
-                if (int(msg_list[2]) & int(msg_list[3])) | int(msg_list[4]):
+                if (int(msg_list[2]) & int(msg_list[3])) | int(msg_list[4]) == 0:
                     NvsStore('mode', 0)
                     machine.reset()
-                    break
 
                 NvsStore('mode', '1')
+                pycom.rgbled(0xffffff)
+                time.sleep(0.5)
+                pycom.rgbled(0x000000)
                 machine.reset()
-
-            if events & Bluetooth.CHAR_READ_EVENT:
-                NvsStore('deveui', binascii.hexlify(LoRa().mac()).decode('utf-8'))
-                return binascii.hexlify(LoRa().mac()).decode('utf-8')
+        else:
+            print("INCORRECT DATA STREAM")
+            machine.reset()

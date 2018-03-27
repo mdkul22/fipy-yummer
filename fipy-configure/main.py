@@ -10,17 +10,20 @@ def reset_state(arg):
 
 reset = Pin('P14', mode=Pin.IN, pull=Pin.PULL_UP, alt=-1)
 reset.callback(trigger=Pin.IRQ_FALLING, handler=reset_state, arg=None)
+pycom.heartbeat(False)
 
 if NvsExtract('mode').retval() == '1':
     print("begin deploy\n")
+    pycom.rgbled(0x000055)
     launch = Deploy()
 
 else:
     print("begin BLE\n")
-    configure = BLE("FiPy", 0xa234567890123456)
+    pycom.rgbled(0x005500)
+    configure = BLE("BLEE", 0xa234567890123456)
 
 #else
     # write the BLE mode initializers
 test = False
 if test == True:
-    x = BLE("FiPy", 0xa234567890123456)
+    x = BLE("BLEE", 0xa234567890123456)

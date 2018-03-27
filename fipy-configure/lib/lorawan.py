@@ -17,7 +17,7 @@ class LoraNode():
         lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
 
         # create an ABP authentication params
-        DevUi = binascii.hexlify(LoRa.().mac())
+        DevUi = binascii.hexlify(LoRa().mac())
         dev_addr = struct.unpack(">l", DevUi[8:])[0]
         nwk_swkey = binascii.unhexlify(nwkSkey)
         app_swkey = binascii.unhexlify(appSkey)

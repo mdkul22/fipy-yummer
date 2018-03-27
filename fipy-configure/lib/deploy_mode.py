@@ -12,6 +12,7 @@ from machine import Timer
 from lorawan import LoraNode
 # all variables
 # switches
+ID = "id"
 MODE_S = "mode"
 WIFI_S = "wifi"
 MQTT_S = "mqtt"
@@ -80,7 +81,8 @@ class Deploy():
 
     def MQTT_Setup(self):
         # Connect to a mqtt server
-        self.client = MQTTClient("FiPy", NvsExtract(M_SERVER).retval(), port=int(NvsExtract(M_PORT).retval()))
+        self.id = NvsExtract(ID).retval()
+        self.client = MQTTClient(self.id, NvsExtract(M_SERVER).retval(), port=int(NvsExtract(M_PORT).retval()))
         self.client.connect()
         print("MQTT Connected")
         self.Sensor_Setup()
@@ -95,21 +97,21 @@ class Deploy():
 
     def temp_publish(self, v):
         if v == 1:
-            self.client.publish("tQb/fipy/temperature", str(self.temp_sensor.temperature()))
+            self.client.publish(self.id+"/temperature", str(self.temp_sensor.temperature()))
         if v == 2:
-            self.client.publish("tQb/fipy/humidity", str(self.temp_sensor.humidity()))
+            self.client.publish(self.id+"/humidity", str(self.temp_sensor.humidity()))
 
     def alt_publish(self, v):
-        self.client.publish("tQb/fipy/altitude", str(v))
+        self.client.publish(self.id+"/altitude", str(v))
 
     def accl_publish(self, v):
         if v == 1:
-            self.client.publish("tQb/fipy/roll", str(self.accl_sensor.roll()))
+            self.client.publish(self.id+"/roll", str(self.accl_sensor.roll()))
         if v == 2:
-            self.client.publish("tQb/fipy/pitch", str(self.accl_sensor.pitch()))
+            self.client.publish(self.id+"/pitch", str(self.accl_sensor.pitch()))
 
     def light_publish(self, v):
-        self.client.publish("tQb/fipy/light", str(v))
+        self.client.publish(self.id+"/light", str(v))
     # Major LoRa setup, though main setup happens in lorawan library
     def LoRa_Setup(self):
         self.instance = LoraNode(NvsExtract(DEVEUI), NvsExtract(APPSKEY), NvsExtract(NWKSKEY))
