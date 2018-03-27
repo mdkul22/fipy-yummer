@@ -28,7 +28,7 @@ M_PORT = "port"
 # LORA
 DEVEUI = "deveui"
 APPSKEY = "appskey"
-NWKSKEY = "nwkSkey"
+NWKSKEY = "nwkskey"
 # SENSORS
 TEMP = "tempsensor"
 ALT = "altsensor"
@@ -97,11 +97,13 @@ class Deploy():
 
     def temp_publish(self, v):
         if v == 1:
+            print(self.temp_sensor.temperature())
             self.client.publish(self.id+"/temperature", str(self.temp_sensor.temperature()))
         if v == 2:
             self.client.publish(self.id+"/humidity", str(self.temp_sensor.humidity()))
 
     def alt_publish(self, v):
+        print(v)
         self.client.publish(self.id+"/altitude", str(v))
 
     def accl_publish(self, v):
@@ -114,7 +116,7 @@ class Deploy():
         self.client.publish(self.id+"/light", str(v))
     # Major LoRa setup, though main setup happens in lorawan library
     def LoRa_Setup(self):
-        self.instance = LoraNode(NvsExtract(DEVEUI), NvsExtract(APPSKEY), NvsExtract(NWKSKEY))
+        self.instance = LoraNode(NvsExtract(DEVEUI).retval(), NvsExtract(APPSKEY).retval(), NvsExtract(NWKSKEY).retval())
         if arg == 0:
             self.Sensor_Setup()
             # instead of polling, we put soft interrupts
@@ -144,22 +146,21 @@ class Deploy():
         self.instance.sendData(str(self.light_sensor.light()[0]))
 
     def Sensor_Setup(self):
-        self.sensactive = 1
         # Using Pysense board currently, so we will employ those sensors
-        if NvsExtract(TEMP) == '1':
-            self.tFrequency = int(NvsExtract(TEMP_F))
+        if NvsExtract(TEMP).retval() == '1':
+            self.tFrequency = int(NvsExtract(TEMP_F).retval())
             self.temp_sensor = SI7006A20()
             self.active = 1
-        if NvsExtract(ALT) == '1':
-            self.altFrequency = int(NvsExtract(ALT_F))
+        if NvsExtract(ALT).retval() == '1':
+            self.altFrequency = int(NvsExtract(ALT_F).retval())
             self.alt_sensor = MPL3115A2()
             self.active = 1
-        if NvsExtract(ACCL) == '1':
-            self.acclFrequency = int(NvsExtract(ACCL_F))
+        if NvsExtract(ACCL).retval() == '1':
+            self.acclFrequency = int(NvsExtract(ACCL_F).retval())
             self.accl_sensor = LIS2HH12()
             self.active = 1
-        if NvsExtract(LIGHT) == '1':
-            self.lightFrequency = int(NvsExtract(LIGHT_F))
+        if NvsExtract(LIGHT).retval() == '1':
+            self.lightFrequency = int(NvsExtract(LIGHT_F).retval())
             self.light_sensor = LTR329ALS01()
             self.active = 1
         else:

@@ -85,7 +85,7 @@ class BLE():
         print(len(msg_list))
         if len(msg_list) == 15:
                 NvsStore('id', msg_list[0])
-                if msg_list[2] == 1:
+                if msg_list[2] == "1":
                     NvsStore('wifi', msg_list[2])
                     NvsStore('ssid', msg_list[5])
                     NvsStore('pass', msg_list[6])
@@ -99,7 +99,7 @@ class BLE():
                 else:
                     pycom.nvs_set('mqtt', 0)
 
-                if msg_list[4] == "1"::
+                if msg_list[4] == "1":
                     NvsStore('lora', msg_list[4])
                     NvsStore('appskey', msg_list[9])
                     NvsStore('nwkskey', msg_list[10])
