@@ -30,14 +30,14 @@ DEVEUI = "deveui"
 APPSKEY = "appskey"
 NWKSKEY = "nwkskey"
 # SENSORS
-TEMP = "tempsensor"
-ALT = "altsensor"
-ACCL = "acclsensor"
-LIGHT = "lightsensor"
+TEMP = "temp_sensor"
+ALT = "alt_sensor"
+ACCL = "accl_sensor"
+LIGHT = "light_sensor"
 # freqs
 TEMP_F = "temp_f"
 ALT_F = "alt_f"
-ACCL = "accl_f"
+ACCL_F = "accl_f"
 LIGHT_F = "light_f"
 
 
@@ -88,12 +88,18 @@ class Deploy():
         self.Sensor_Setup()
         if self.active  == 1:
             # alarm basically used for callbacks to prevent polling
-            pub_t1 = Timer.alarm(self.temp_publish, self.tFrequency, arg=1, periodic=True)
-            pub_t2= Timer.alarm(self.temp_publish, self.tFrequency, arg=2, periodic=True)
-            pub_alt = Timer.alarm(self.alt_publish, self.altFrequency, arg=self.alt_sensor.altitude(), periodic=True)
-            pub_accl1 = Timer.alarm(self.accl_publish, self.acclFrequency, arg=1, periodic=True)
-            pub_accl2 = Timer.alarm(self.accl_publish, self.acclFrequency, arg=2, periodic=True)
-            pub_light = Timer.alarm(self.light_publish, self.lightFrequency, arg=self.light_sensor.light(), periodic=True)
+            print("alarm")
+            pub_t1 = Timer.Alarm(self.temp_publish, float(self.tFrequency), arg=1, periodic=True)
+            time.sleep(0.1)
+            pub_t2= Timer.Alarm(self.temp_publish, float(self.tFrequency), arg=2, periodic=True)
+            time.sleep(0.1)
+            pub_alt = Timer.Alarm(self.alt_publish, float(self.altFrequency), arg=self.alt_sensor.altitude(), periodic=True)
+            time.sleep(0.1)
+            pub_accl1 = Timer.Alarm(self.accl_publish, float(self.acclFrequency), arg=1, periodic=True)
+            time.sleep(0.1)
+            pub_accl2 = Timer.Alarm(self.accl_publish, float(self.acclFrequency), arg=2, periodic=True)
+            time.sleep(0.1)
+            pub_light = Timer.Alarm(self.light_publish, float(self.lightFrequency), arg=self.light_sensor.light(), periodic=True)
 
     def temp_publish(self, v):
         if v == 1:
@@ -148,6 +154,7 @@ class Deploy():
     def Sensor_Setup(self):
         # Using Pysense board currently, so we will employ those sensors
         if NvsExtract(TEMP).retval() == '1':
+            print("Enter Temp")
             self.tFrequency = int(NvsExtract(TEMP_F).retval())
             self.temp_sensor = SI7006A20()
             self.active = 1
@@ -169,3 +176,4 @@ class Deploy():
             self.acclFrequency = 0
             self.lightFrequency = 0
             self.active = 0
+        print("self active is" + str(self.active))

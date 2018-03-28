@@ -67,6 +67,15 @@ class BLE():
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
             msg = chr.value().decode('utf-8')
+            if msg.find("/?") != -1:
+                msg = msg[1:].split(";")
+                print("Entered")
+                self.msg.append(self.msg[len(self.msg)-1]+msg[0])
+                self.msg.remove(self.msg[len(self.msg)-2])
+                if len(msg) > 1:
+                    self.msg = self.msg + msg[1:]
+                return
+
             if msg[len(msg)-2:] == '>e':
                 msg_list = msg[1:len(msg)-2].split(";")
                 print(msg_list)
@@ -138,5 +147,8 @@ class BLE():
                 pycom.rgbled(0xffffff)
                 time.sleep(2)
                 pycom.rgbled(0x000000)
+                print("ENTERING DEPLOY MODE IN 5 seconds")
+                time.sleep(5)
+                machine.reset()
         else:
             print("INCORRECT DATA STREAM")
