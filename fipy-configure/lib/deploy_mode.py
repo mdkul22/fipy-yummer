@@ -126,10 +126,7 @@ class Deploy():
     # Major LoRa setup, though main setup happens in lorawan library
     def LoRa_Setup(self):
         lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
-        DevUi = binascii.hexlify(LoRa().mac())
         dev_addr = struct.unpack(">l", binascii.unhexlify('90 53 07 24'.replace(' ','')))[0]
-        print(NvsExtract(NWKSKEY).retval())
-        print("2B7E151628AED2A6ABF7158809CF4F3C")
         nwk_swkey = binascii.unhexlify(NvsExtract(NWKSKEY).retval())
         app_swkey = binascii.unhexlify(NvsExtract(APPSKEY).retval())
         lora.join(activation=LoRa.ABP, auth=(dev_addr, nwk_swkey, app_swkey))
@@ -144,13 +141,13 @@ class Deploy():
         self.s.setblocking(True)
         self.Sensor_Setup()
         # instead of polling, we put soft interrupts
-        send_t = Timer.Alarm(self.lora_send_temp, float(self.tFrequency)*20.0, periodic=True)
-#        time.sleep(2)
-#        send_alt = Timer.Alarm(self.lora_send_alt, float(self.altFrequency)*30.0, periodic=True)
-#        time.sleep(2)
-#        send_accl = Timer.Alarm(self.lora_send_accl, float(self.acclFrequency)*25.0, periodic=True)
-#        time.sleep(2)
-#        send_light = Timer.Alarm(self.lora_send_light, float(self.lightFrequency)*25.0, periodic=True)
+        send_t = Timer.Alarm(self.lora_send_temp, float(self.tFrequency)*60.0, periodic=True)
+        time.sleep(10)
+        send_alt = Timer.Alarm(self.lora_send_alt, float(self.altFrequency)*60.0, periodic=True)
+        time.sleep(10)
+        send_accl = Timer.Alarm(self.lora_send_accl, float(self.acclFrequency)*60.0, periodic=True)
+        time.sleep(10)
+        send_light = Timer.Alarm(self.lora_send_light, float(self.lightFrequency)*60.0, periodic=True)
         print("Done")
         # connect to a LoRaWAN gateway
 
@@ -165,17 +162,27 @@ class Deploy():
     def lora_send_alt(self, arg):
         # altitude based on pressure
         print("sent alt")
+        x = self.alt_sensor.altitude()
+        dict = {"altitude": x}
+        msg = json.dumps(dict)
         self.s.send(msg)
 
     def lora_send_accl(self, arg):
         # roll and pitch values
         print("sent accl")
+        x = self.accl_sensor.roll()
+        y = self.accl_sensor.pitch()
+        dict = {"roll": x, "pitch": y}
+        msg = json.dumps(dict)
         self.s.send(msg)
 
     def lora_send_light(self, arg):
         # only 400 nm i.e channel 0 or mainly blue spectrum light
         # supposedly detects white light better
         print("sent light")
+        (x, y)  = self.light_sensor.light()
+        dict = {"blue spectrum": x, "red spectrum": y}
+        msg = json.dumps(dict)
         self.s.send(msg)
 
     def Sensor_Setup(self):
