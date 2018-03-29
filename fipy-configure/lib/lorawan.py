@@ -17,10 +17,10 @@ class LoraNode():
         lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
 
         # create an ABP authentication params
-        DevUi = binascii.hexlify(LoRa().mac())
-        dev_addr = struct.unpack(">l", DevUi[8:])[0]
+        dev_addr = struct.unpack(">l", binascii.unhexlify('90 53 07 24'.replace(' ','')))[0]
         nwk_swkey = binascii.unhexlify(nwkSkey)
         app_swkey = binascii.unhexlify(appSkey)
+        print(nwk_swkey)
 
         # join a network using ABP (Activation By Personalization)
         lora.join(activation=LoRa.ABP, auth=(dev_addr, nwk_swkey, app_swkey))
@@ -31,9 +31,13 @@ class LoraNode():
         self.s.bind(5)
         # make the socket blocking
         # (waits for the data to be sent and for the 2 receive windows to expire)
-        self.s.setblocking(False)
+        self.s.setblocking(True)
         print("Connected to LoRa network")
 
     def sendData(self, string):
         # send some data
-        self.s.send(string)
+        try:
+            self.s.send(string)
+        except OSError as e:
+            if e.args[0] == 11:
+                print("weird error")

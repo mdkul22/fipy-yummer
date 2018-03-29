@@ -1,4 +1,5 @@
 import pycom
+import json
 import time
 from network import WLAN
 from nvstring import NvsExtract
@@ -9,7 +10,10 @@ from MPL3115A2 import MPL3115A2
 from LIS2HH12 import LIS2HH12
 from LTR329ALS01 import LTR329ALS01
 from machine import Timer
-from lorawan import LoraNode
+from network import LoRa
+import binascii
+import struct
+import socket
 # all variables
 # switches
 ID = "id"
@@ -64,7 +68,6 @@ class Deploy():
 
         if NvsExtract(LORA_S).retval() == '1':
             self.LoRa_Setup()
-            self.lora_send(self.sensactive)
 
         # not yet complete
     def WiFi_Setup(self):
@@ -122,34 +125,58 @@ class Deploy():
         self.client.publish(self.id+"/light", str(v))
     # Major LoRa setup, though main setup happens in lorawan library
     def LoRa_Setup(self):
-        self.instance = LoraNode(NvsExtract(DEVEUI).retval(), NvsExtract(APPSKEY).retval())
-        if arg == 0:
-            self.Sensor_Setup()
-            # instead of polling, we put soft interrupts
-            send_t = Timer.alarm(self.lora_send_temp, self.tFrequency, periodic=True)
-            send_alt = Timer.alarm(self.lora_send_alt, self.altFrequency, periodic=True)
-            send_accl = Timer.alarm(self.lora_send_accl, self.acclFrequency, periodic=True)
-            send_light = Timer.alarm(self.lora_send_light, self.lightFrequency, periodic=True)
-        else:
-            pass
+        lora = LoRa(mode=LoRa.LORAWAN, region=LoRa.EU868)
+        DevUi = binascii.hexlify(LoRa().mac())
+        dev_addr = struct.unpack(">l", binascii.unhexlify('90 53 07 24'.replace(' ','')))[0]
+        print(NvsExtract(NWKSKEY).retval())
+        print("2B7E151628AED2A6ABF7158809CF4F3C")
+        nwk_swkey = binascii.unhexlify(NvsExtract(NWKSKEY).retval())
+        app_swkey = binascii.unhexlify(NvsExtract(APPSKEY).retval())
+        lora.join(activation=LoRa.ABP, auth=(dev_addr, nwk_swkey, app_swkey))
+        print("Done")
+        # create a LoRa socket
+        self.s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
+
+        # set the LoRaWAN data rate
+        self.s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
+        self.s.bind(5)
+        # make the socket non-blocking
+        self.s.setblocking(True)
+        self.Sensor_Setup()
+        # instead of polling, we put soft interrupts
+        send_t = Timer.Alarm(self.lora_send_temp, float(self.tFrequency)*20.0, periodic=True)
+#        time.sleep(2)
+#        send_alt = Timer.Alarm(self.lora_send_alt, float(self.altFrequency)*30.0, periodic=True)
+#        time.sleep(2)
+#        send_accl = Timer.Alarm(self.lora_send_accl, float(self.acclFrequency)*25.0, periodic=True)
+#        time.sleep(2)
+#        send_light = Timer.Alarm(self.lora_send_light, float(self.lightFrequency)*25.0, periodic=True)
+        print("Done")
         # connect to a LoRaWAN gateway
-    def lora_send_temp(self):
-        self.instance.sendData(str(self.temp_sensor.temperature()))
-        self.instance.sendData(str(self.temp_sensor.humidity()))
 
-    def lora_send_alt(self):
+    def lora_send_temp(self, arg):
+        print("sent temp")
+        x = self.temp_sensor.temperature()
+        y = self.temp_sensor.humidity()
+        dict = {"temp": x, "humidity": y}
+        msg = json.dumps(dict)
+        self.s.send(msg)
+
+    def lora_send_alt(self, arg):
         # altitude based on pressure
-        self.instance.sendData(str(self.alt_sensor.altitude()))
+        print("sent alt")
+        self.s.send(msg)
 
-    def lora_send_accl(self):
+    def lora_send_accl(self, arg):
         # roll and pitch values
-        self.instance.sendData(str(self.accl_sensor.pitch()))
-        self.instance.sendData(str(self.accl_sensor.roll()))
+        print("sent accl")
+        self.s.send(msg)
 
-    def lora_send_light(self):
+    def lora_send_light(self, arg):
         # only 400 nm i.e channel 0 or mainly blue spectrum light
         # supposedly detects white light better
-        self.instance.sendData(str(self.light_sensor.light()[0]))
+        print("sent light")
+        self.s.send(msg)
 
     def Sensor_Setup(self):
         # Using Pysense board currently, so we will employ those sensors
@@ -176,4 +203,4 @@ class Deploy():
             self.acclFrequency = 0
             self.lightFrequency = 0
             self.active = 0
-        print("self active is" + str(self.active))
+        print("self active is " + str(self.active))
