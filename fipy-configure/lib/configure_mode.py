@@ -67,13 +67,15 @@ class BLE():
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
             msg = chr.value().decode('utf-8')
+            print("filtered" + msg)
             if msg.find("/?") != -1:
-                msg = msg[1:].split(";")
+                msg = msg[2:].split(";")
                 print("Entered")
                 self.msg.append(self.msg[len(self.msg)-1]+msg[0])
                 self.msg.remove(self.msg[len(self.msg)-2])
                 if len(msg) > 1:
                     self.msg = self.msg + msg[1:]
+                print(self.msg)
                 return
 
             if msg[len(msg)-2:] == '>e':

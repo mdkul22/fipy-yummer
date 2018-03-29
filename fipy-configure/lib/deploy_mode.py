@@ -122,7 +122,7 @@ class Deploy():
         self.client.publish(self.id+"/light", str(v))
     # Major LoRa setup, though main setup happens in lorawan library
     def LoRa_Setup(self):
-        self.instance = LoraNode(NvsExtract(DEVEUI).retval(), NvsExtract(APPSKEY).retval(), NvsExtract(NWKSKEY).retval())
+        self.instance = LoraNode(NvsExtract(DEVEUI).retval(), NvsExtract(APPSKEY).retval())
         if arg == 0:
             self.Sensor_Setup()
             # instead of polling, we put soft interrupts
