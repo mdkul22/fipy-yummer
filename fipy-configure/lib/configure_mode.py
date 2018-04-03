@@ -23,6 +23,8 @@ class BLE():
             print("Client connected")
         elif events & Bluetooth.CLIENT_DISCONNECTED:
             print("Client disconnected")
+        self.msg = ["fipy", "1"]
+        self.string = ";fipy;1"
 
     def setup(self):
         # sets up all the services and characteristics
@@ -34,7 +36,8 @@ class BLE():
         # main service
         self.message = config_service.characteristic(uuid=0xfff0, value=0)
         # nvram declarations
-        self.msg = []
+        self.msg = ["fipy", "1"]
+        self.string = ";fipy;1"
         pycom.nvs_set('id', 0)
         pycom.nvs_set('mode', 0)
         pycom.nvs_set('wifi', 0)
@@ -57,17 +60,17 @@ class BLE():
         # callbacks to deploy_handler which will use the switch_dict to switch between chars
         msg_cb = self.message.callback(trigger=Bluetooth.CHAR_WRITE_EVENT | Bluetooth.CHAR_READ_EVENT, handler=self.msg_handler)
         # restart details callback)
-
         print("waiting for callback")
 
     def msg_handler(self,chr):
-        print("Entered Deploy Handler\n")
+        print("Entered msg_handler\n")
         # handles write and read requests from the client
         print(chr.value())
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
             msg = chr.value().decode('utf-8')
-            print("filtered" + msg)
+            print("filtered " + self.string)
+            self.string += msg
             if msg.find("/?") != -1:
                 msg = msg[2:].split(";")
                 print("Entered")
@@ -77,8 +80,11 @@ class BLE():
                     self.msg = self.msg + msg[1:]
                 print(self.msg)
                 return
+            print("string is" + self.string)
 
             if msg[len(msg)-2:] == '>e':
+                self.list = []
+                self.list = self.string[:len(self.string)-2].split(";")
                 msg_list = msg[1:len(msg)-2].split(";")
                 print(msg_list)
                 self.msg += msg_list
@@ -86,12 +92,15 @@ class BLE():
                 return # device should reset after this
             msg_list = msg.split(";")
             self.msg += msg_list[1:]
-            print(self.msg)
+
         elif events & Bluetooth.CHAR_READ_EVENT:
             NvsStore('deveui', binascii.hexlify(LoRa().mac()).decode('utf-8'))
             return binascii.hexlify(LoRa().mac()).decode('utf-8')
 
     def execute(self, msg_list):
+        for x in range(len(self.string)):
+            if self.string[x] == '':
+                self.string[x] = '0'
         print(msg_list)
         print(len(msg_list))
         if len(msg_list) == 15:
