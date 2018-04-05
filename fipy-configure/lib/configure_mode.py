@@ -23,8 +23,7 @@ class BLE():
             print("Client connected")
         elif events & Bluetooth.CLIENT_DISCONNECTED:
             print("Client disconnected")
-        self.msg = ["fipy", "1"]
-        self.string = ";fipy;1"
+        self.string = ""
 
     def setup(self):
         # sets up all the services and characteristics
