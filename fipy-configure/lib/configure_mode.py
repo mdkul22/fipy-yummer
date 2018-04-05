@@ -36,8 +36,7 @@ class BLE():
         # main service
         self.message = config_service.characteristic(uuid=0xfff0, value=0)
         # nvram declarations
-        self.msg = ["fipy", "1"]
-        self.string = ";fipy;1"
+        self.string = ""
         pycom.nvs_set('id', 0)
         pycom.nvs_set('mode', 0)
         pycom.nvs_set('wifi', 0)
@@ -69,19 +68,8 @@ class BLE():
         events = chr.events()
         if events & Bluetooth.CHAR_WRITE_EVENT:
             msg = chr.value().decode('utf-8')
-            print("filtered " + self.string)
             self.string += msg
-            if msg.find("/?") != -1:
-                msg = msg[2:].split(";")
-                print("Entered")
-                self.msg.append(self.msg[len(self.msg)-1]+msg[0])
-                self.msg.remove(self.msg[len(self.msg)-2])
-                if len(msg) > 1:
-                    self.msg = self.msg + msg[1:]
-                print(self.msg)
-                return
             print("string is" + self.string)
-
             if msg[len(msg)-2:] == '>e':
                 self.list = []
                 self.list = self.string[:len(self.string)-2].split(";")
@@ -90,8 +78,6 @@ class BLE():
                 self.msg += msg_list
                 self.execute(self.list)
                 return # device should reset after this
-            msg_list = msg.split(";")
-            self.msg += msg_list[1:]
 
         elif events & Bluetooth.CHAR_READ_EVENT:
             NvsStore('deveui', binascii.hexlify(LoRa().mac()).decode('utf-8'))
@@ -102,7 +88,7 @@ class BLE():
             if msg_list[x] == '':
                 msg_list[x] = '0'
         print(msg_list)
-        print(len(msg_list))
+        print("count" + str(len(msg_list)))
         if len(msg_list) == 15:
                 NvsStore('id', msg_list[0])
                 if msg_list[2] == "1":
