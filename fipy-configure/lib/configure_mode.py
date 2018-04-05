@@ -86,9 +86,9 @@ class BLE():
                 self.list = []
                 self.list = self.string[:len(self.string)-2].split(";")
                 msg_list = msg[1:len(msg)-2].split(";")
-                print(msg_list)
+                print(self.list)
                 self.msg += msg_list
-                self.execute(self.msg)
+                self.execute(self.list)
                 return # device should reset after this
             msg_list = msg.split(";")
             self.msg += msg_list[1:]
@@ -98,9 +98,9 @@ class BLE():
             return binascii.hexlify(LoRa().mac()).decode('utf-8')
 
     def execute(self, msg_list):
-        for x in range(len(self.string)):
-            if self.string[x] == '':
-                self.string[x] = '0'
+        for x in range(len(msg_list)):
+            if msg_list[x] == '':
+                msg_list[x] = '0'
         print(msg_list)
         print(len(msg_list))
         if len(msg_list) == 15:
