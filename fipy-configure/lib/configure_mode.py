@@ -147,3 +147,4 @@ class BLE():
                 machine.reset()
         else:
             print("INCORRECT DATA STREAM")
+            self.string = ""
