@@ -154,7 +154,7 @@ class MQTTClient:
     def wait_msg(self):
         res = self.sock.read(1)
         self.sock.setblocking(True)
-        if res is None:
+        if res is None or res == b"":
             return None
         if res == b"":
             raise OSError(-1)
@@ -189,4 +189,3 @@ class MQTTClient:
     def check_msg(self):
         self.sock.setblocking(False)
         return self.wait_msg()
-

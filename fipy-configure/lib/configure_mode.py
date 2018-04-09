@@ -74,7 +74,6 @@ class BLE():
                 self.list = self.string[:len(self.string)-2].split(";")
                 msg_list = msg[1:len(msg)-2].split(";")
                 print(self.list)
-                self.msg += msg_list
                 self.execute(self.list)
                 return # device should reset after this
 

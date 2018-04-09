@@ -53,7 +53,7 @@ class Deploy():
     def __Init(self):
         # check if mode is 1 and if not, enter low power state
         if NvsExtract(MODE_S).retval() == '0':
-            machine.reset()
+            print("Click button to clear nvram")
         if NvsExtract(MODE_S).retval() == '1':
             self.boot_up()
         self.sensactive = 0
@@ -85,7 +85,7 @@ class Deploy():
     def MQTT_Setup(self):
         # Connect to a mqtt server
         self.id = NvsExtract(ID).retval()
-        self.client = MQTTClient(self.id, NvsExtract(M_SERVER).retval(), port=int(NvsExtract(M_PORT).retval()))
+        self.client = MQTTClient(str(self.id), str(NvsExtract(M_SERVER).retval()), port=int(NvsExtract(M_PORT).retval()))
         self.client.connect()
         print("MQTT Connected")
         self.Sensor_Setup()
@@ -133,7 +133,6 @@ class Deploy():
         print("Done")
         # create a LoRa socket
         self.s = socket.socket(socket.AF_LORA, socket.SOCK_RAW)
-
         # set the LoRaWAN data rate
         self.s.setsockopt(socket.SOL_LORA, socket.SO_DR, 5)
         self.s.bind(5)
@@ -141,14 +140,18 @@ class Deploy():
         self.s.setblocking(True)
         self.Sensor_Setup()
         # instead of polling, we put soft interrupts
-        send_t = Timer.Alarm(self.lora_send_temp, float(self.tFrequency)*60.0, periodic=True)
-        time.sleep(10)
-        send_alt = Timer.Alarm(self.lora_send_alt, float(self.altFrequency)*60.0, periodic=True)
-        time.sleep(10)
-        send_accl = Timer.Alarm(self.lora_send_accl, float(self.acclFrequency)*60.0, periodic=True)
-        time.sleep(10)
-        send_light = Timer.Alarm(self.lora_send_light, float(self.lightFrequency)*60.0, periodic=True)
-        print("Done")
+        if self.tFrequency != 0:
+            send_t = Timer.Alarm(self.lora_send_temp, float(self.tFrequency)*60.0, periodic=True)
+            time.sleep(10)
+        if self.altFrequency != 0:
+            send_alt = Timer.Alarm(self.lora_send_alt, float(self.altFrequency)*60.0, periodic=True)
+            time.sleep(10)
+        if self.acclFrequency != 0:
+            send_accl = Timer.Alarm(self.lora_send_accl, float(self.acclFrequency)*60.0, periodic=True)
+            time.sleep(10)
+        if self.lightFrequency != 0:
+            send_light = Timer.Alarm(self.lora_send_light, float(self.lightFrequency)*60.0, periodic=True)
+        print("Timers Done")
         # connect to a LoRaWAN gateway
 
     def lora_send_temp(self, arg):
