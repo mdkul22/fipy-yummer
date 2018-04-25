@@ -92,17 +92,24 @@ class Deploy():
         if self.active  == 1:
             # alarm basically used for callbacks to prevent polling
             print("alarm")
-            pub_t1 = Timer.Alarm(self.temp_publish, float(self.tFrequency), arg=1, periodic=True)
-            time.sleep(0.1)
-            pub_t2= Timer.Alarm(self.temp_publish, float(self.tFrequency), arg=2, periodic=True)
-            time.sleep(0.1)
-            pub_alt = Timer.Alarm(self.alt_publish, float(self.altFrequency), arg=self.alt_sensor.altitude(), periodic=True)
-            time.sleep(0.1)
-            pub_accl1 = Timer.Alarm(self.accl_publish, float(self.acclFrequency), arg=1, periodic=True)
-            time.sleep(0.1)
-            pub_accl2 = Timer.Alarm(self.accl_publish, float(self.acclFrequency), arg=2, periodic=True)
-            time.sleep(0.1)
-            pub_light = Timer.Alarm(self.light_publish, float(self.lightFrequency), arg=self.light_sensor.light(), periodic=True)
+            if(self.tFrequency):
+                pub_t1 = Timer.Alarm(self.temp_publish, float(self.tFrequency), arg=1, periodic=True)
+                time.sleep(0.1)
+            if(self.tFrequency):
+                pub_t2= Timer.Alarm(self.temp_publish, float(self.tFrequency), arg=2, periodic=True)
+                time.sleep(0.1)
+            if(self.altFrequency):
+                pub_alt = Timer.Alarm(self.alt_publish, float(self.altFrequency), arg=self.alt_sensor.altitude(), periodic=True)
+                time.sleep(0.1)
+            if(self.acclFrequency):
+                pub_accl1 = Timer.Alarm(self.accl_publish, float(self.acclFrequency), arg=1, periodic=True)
+                time.sleep(0.1)
+            if(self.acclFrequency):
+                pub_accl2 = Timer.Alarm(self.accl_publish, float(self.acclFrequency), arg=2, periodic=True)
+                time.sleep(0.1)
+            if(self.lightFrequency):
+                pub_light = Timer.Alarm(self.light_publish, float(self.lightFrequency), arg=self.light_sensor.light(), periodic=True)
+                time.sleep(0.1)
 
     def temp_publish(self, v):
         if v == 1:
