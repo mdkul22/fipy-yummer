@@ -111,7 +111,7 @@ class Deploy():
                 pub_light = Timer.Alarm(self.light_publish, float(self.lightFrequency), arg=self.light_sensor.light(), periodic=True)
                 time.sleep(0.1)
 
-    def temp_publish(self, v):
+    def temp_publish(self, v):# done
         if v == 1:
             print(self.temp_sensor.temperature())
             self.client.publish(self.id+"/temperature", str(self.temp_sensor.temperature()))
